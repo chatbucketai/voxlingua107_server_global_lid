@@ -1,0 +1,11 @@
+.git
+.gitignore
+__pycache__
+*.py[cod]
+venv/
+*.log
+.DS_Store
+.idea/
+.vscode/
+_dev/
+voxlingua107_test_results/
