@@ -63,7 +63,7 @@ Model is downloaded from HuggingFace during Docker build — container starts fa
 
 Cloud Run service `stt-voxlingua107`, public at `https://stt-agent.chatbucket.chat/global_lid_voxlingua107/{identify,health}` behind the STT load balancer (Cloud Armor, managed certificate). Infra is Terraform (chat-bucket-prod-terraform, `modules/stt-cloudrun`).
 
-`.github/workflows/gcp-build-push.yml`: every push/PR builds, smoke-tests, checks auth and scans the image. Production: run the workflow manually on `main` (target `production`). Repo variables/secrets: `PROD_*` (and `STAGE_*` for staging), same names as speech_lid.
+`.github/workflows/gcp-build-push.yml`: runs only when a PR is merged into `develop` or `main`: builds, smoke-tests, checks auth and scans the image. Production: run the workflow manually on `main` (target `production`). Repo variables/secrets: `PROD_*` (and `STAGE_*` for staging), same names as speech_lid.
 
 `POST /identify` needs `Authorization: Bearer <token>`: an STT token (HS256, aud `stt`, key `S2T_TOKEN_KEY` / `S2T_TOKEN_KEY_B2B`) or a ChatBucket app login token. With no key configured (local runs) every request is allowed.
 
