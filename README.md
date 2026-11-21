@@ -48,7 +48,7 @@ pip install -r requirements.txt
 python server.py
 ```
 
-Server starts on `http://localhost:8000` (`S2T_PORT` to change)
+Server starts on `http://localhost:8000` (`S2T_PORT` to change). Outside Docker, first download the model into `MODEL_DIR` (see the Dockerfile).
 
 ## Docker
 

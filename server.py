@@ -59,7 +59,7 @@ def startup():
     global classifier, ALL_LABELS
     log.info("Loading VoxLingua107 model from %s", MODEL_DIR)
     classifier = EncoderClassifier.from_hparams(
-        source="speechbrain/lang-id-voxlingua107-ecapa",
+        source=MODEL_DIR,  # baked into the image; nothing is downloaded or written
         savedir=MODEL_DIR,
         local_strategy=LocalStrategy.COPY_SKIP_CACHE,
     )
