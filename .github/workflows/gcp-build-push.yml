@@ -2,10 +2,10 @@ name: GCP Build, Push & Deploy
 
 # Runs as Cloud Run service stt-voxlingua107 behind
 # https://<stt domain>/global_lid_voxlingua107, same pipeline as speech_lid (stt-lid).
-# Every push / pull request: build the image, smoke-test it, generate its SBOM
-# (Syft) and scan the SBOM for vulnerabilities (Grype - fails on fixable
-# CRITICAL findings).
-# Push to develop only (and only once the STAGE_* variables exist): push the image to Artifact Registry as
+# Runs only when a pull request is merged into develop or main (not on every
+# commit): build the image, smoke-test it, generate its SBOM (Syft) and scan
+# the SBOM for vulnerabilities (Grype - fails on fixable CRITICAL findings).
+# Merge into develop only (and only once the STAGE_* variables exist): push the image to Artifact Registry as
 # develop-<short sha>, then deploy it to Cloud Run (job "deploy", environment
 # "production" on the production deploy job only). Cloud Run moves
 # traffic only once the new revision passes its startup probe; if the public
@@ -15,15 +15,16 @@ name: GCP Build, Push & Deploy
 # commit SHA (tags can be moved).
 #
 # Repo Settings -> Secrets and variables -> Actions:
-#   staging (push to develop):  vars STAGE_GCP_PROJECT_ID, STAGE_GCP_REGION, STAGE_GAR_REPOSITORY,
+#   staging (merge into develop):  vars STAGE_GCP_PROJECT_ID, STAGE_GCP_REGION, STAGE_GAR_REPOSITORY,
 #     STAGE_IMAGE_NAME, STAGE_CLOUD_RUN_SERVICE, STAGE_STT_HEALTH_URL, STAGE_STT_ALLOWED_ORIGIN,
 #     secrets STAGE_GCP_WIF_PROVIDER, STAGE_GCP_DEPLOY_SA
 #   production (manual run, main only): the same names with PROD_
 #
 # Production builds `commit` (blank = HEAD) as prod-<sha> and deploys it to Cloud Run.
 on:
-  push:
   pull_request:
+    types: [closed]
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       target:
@@ -43,7 +44,7 @@ permissions:
 
 jobs:
   build-staging:
-    if: github.event_name != 'workflow_dispatch'
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       PROJECT: ${{ vars.STAGE_GCP_PROJECT_ID }}
@@ -56,12 +57,13 @@ jobs:
       - name: Target settings
         id: cfg
         env:
-          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
           STAGE_PROJECT: ${{ vars.STAGE_GCP_PROJECT_ID }}
         run: |
           PUBLISH=false
-          [ "$GITHUB_REF" = refs/heads/develop ] && [ "$EVENT" = push ] && [ -n "$STAGE_PROJECT" ] && PUBLISH=true
-          printf 'publish=%s\nref=\ntag_prefix=develop\n' "$PUBLISH" >> "$GITHUB_OUTPUT"
+          [ "$BASE" = develop ] && [ -n "$STAGE_PROJECT" ] && PUBLISH=true
+          printf 'publish=%s\nref=%s\ntag_prefix=develop\n' "$PUBLISH" "$MERGE_SHA" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
