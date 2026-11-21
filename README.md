@@ -48,7 +48,7 @@ pip install -r requirements.txt
 python server.py
 ```
 
-Server starts on `http://localhost:8000`
+Server starts on `http://localhost:8000` (`S2T_PORT` to change). Outside Docker, first download the model into `MODEL_DIR` (see the Dockerfile).
 
 ## Docker
 
@@ -61,11 +61,11 @@ Model is downloaded from HuggingFace during Docker build — container starts fa
 
 ## Deploy (GCP Cloud Run)
 
-```bash
-gcloud builds submit --config=cloudbuild.yaml
-```
+Cloud Run service `stt-voxlingua107`, public at `https://stt-agent.chatbucket.chat/global_lid_voxlingua107/{identify,health}` behind the STT load balancer (Cloud Armor, managed certificate). Infra is Terraform (chat-bucket-prod-terraform, `modules/stt-cloudrun`).
 
-**Cloud Run config:** 4 vCPU, 4Gi RAM, asia-south1, min-instances=1
+`.github/workflows/gcp-build-push.yml`: every push/PR builds, smoke-tests, checks auth and scans the image. Production: run the workflow manually on `main` (target `production`). Repo variables/secrets: `PROD_*` (and `STAGE_*` for staging), same names as speech_lid.
+
+`POST /identify` needs `Authorization: Bearer <token>`: an STT token (HS256, aud `stt`, key `S2T_TOKEN_KEY` / `S2T_TOKEN_KEY_B2B`) or a ChatBucket app login token. With no key configured (local runs) every request is allowed.
 
 ## Supported languages (107)
 
