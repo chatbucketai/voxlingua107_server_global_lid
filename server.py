@@ -54,15 +54,22 @@ classifier = None
 ALL_LABELS = []
 
 
+def load_model():
+    # Files come from MODEL_DIR only (hyperparams.yaml points pretrained_path at
+    # Hugging Face). The Dockerfile runs this once so nothing is written at runtime.
+    return EncoderClassifier.from_hparams(
+        source=MODEL_DIR,
+        savedir=MODEL_DIR,
+        overrides={"pretrained_path": MODEL_DIR},
+        local_strategy=LocalStrategy.COPY_SKIP_CACHE,
+    )
+
+
 @app.on_event("startup")
 def startup():
     global classifier, ALL_LABELS
     log.info("Loading VoxLingua107 model from %s", MODEL_DIR)
-    classifier = EncoderClassifier.from_hparams(
-        source=MODEL_DIR,  # baked into the image; nothing is downloaded or written
-        savedir=MODEL_DIR,
-        local_strategy=LocalStrategy.COPY_SKIP_CACHE,
-    )
+    classifier = load_model()
     ALL_LABELS = sorted(classifier.hparams.label_encoder.lab2ind.keys())
     log.info("Model loaded. %d languages available.", len(ALL_LABELS))
 
