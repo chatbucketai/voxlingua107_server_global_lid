@@ -130,6 +130,10 @@ jobs:
           test "$app" = 200 && test "$b2b" = 200 && test "$wrong" = 401 && test "$none" = 401
           test "$login" = 200 && test "$refresh" = 401 && test "$preotp" = 401 && test "$forged" = 401
 
+      - name: Container logs
+        if: failure()
+        run: docker logs lid 2>&1 | tail -60; docker logs lid-auth 2>&1 | tail -60 || true
+
       - name: SBOM (Syft)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
@@ -301,6 +305,10 @@ jobs:
           echo "app login: $login, refresh: $refresh, pre-OTP: $preotp, other RSA key: $forged"
           test "$app" = 200 && test "$b2b" = 200 && test "$wrong" = 401 && test "$none" = 401
           test "$login" = 200 && test "$refresh" = 401 && test "$preotp" = 401 && test "$forged" = 401
+
+      - name: Container logs
+        if: failure()
+        run: docker logs lid 2>&1 | tail -60; docker logs lid-auth 2>&1 | tail -60 || true
 
       - name: SBOM (Syft)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
